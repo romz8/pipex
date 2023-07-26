@@ -14,67 +14,81 @@
 #include "pipex.h"
 
 /* first we need to iterate over the env and isolate the PATH*/
-char *search_path(char *env[])
+char **search_path(char *env[])
 {
     int i;
+    char **path_matrix;
     char *path;
     
     path = NULL;
     i = 0;
-    while (env[i] && ft_strncmp(env[i], "PATH=", 5))
+    while (env[i] && ft_strncmp(env[i], "PATH", 4))
         i++;
-    if (!ft_strncmp(env[i], "PATH=", 5))
+    if (!ft_strncmp(env[i], "PATH", 4))
         path = env[i];
-    //printf("\n env path is : %s \n", path);
-    return(path);
+    else
+        path = DEF_PATH;
+    path_matrix = ft_split(path, ':');
+    return(path_matrix);
 }
 
 /* noew let's look for a command line function in the path and return the path exec */
-char *exec_path(char *path, char *cmd)
+char *exec_path(char **all_path, char *cmd)
 {
     char *test_path;
-    char **all_path;
-    char *_cmd;
-    int i;
+    char *tmp_cmd;
     
-    if (!path || !cmd)
-        return(NULL);
-    all_path = ft_split(path, ':');
     if (!all_path)
         return (NULL);
-    i = 0;
-    _cmd = ft_strjoin("/", cmd);
-    if (!_cmd)
-        return (NULL);
-    test_path = ft_strjoin(all_path[i],_cmd);
-    while(access(test_path, F_OK) != 0 && all_path[++i])
+    while(*all_path)
     {
+        tmp_cmd = ft_strjoin("/", cmd);
+        test_path = ft_strjoin(*all_path, tmp_cmd);
+        free(tmp_cmd);
+        if (access(test_path, F_OK) == 0)
+            return (test_path);
         free(test_path);
-        test_path = ft_strjoin(all_path[i], _cmd);
+        all_path++;
     }
-    free(_cmd);
-    free_split(all_path);
-    printf("\n cmdline path is : %s \n", test_path);
-    return (test_path); //WARNING !! was malloc don't forget to free later
+    return (NULL); //WARNING !! was malloc don't forget to free later
 }
 
-void    build_exec(char *path, char *arg_user, char *env[])
+/*we build the execve with error check along the way
+ 1- pass arguments are input for cmd (ex : "ls -l") + the env variables
+ 2- we split the the cmd argument with ft_split on space : 
+ "ls -l" becomes:
+    arg_cmd = ["ls", "-l", NULL]
+ 3 - we use search_path to look for the path inside the env[] and return a split
+  matrix of all path separated by :  
+ 4 - we search for the correct path inside the matrix with exec_path : if access 
+ function return a a path, it is where the cmmd can be found, otherwise return null
+ 5 - if we have a null value we can now call exit as the path won't be correct
+ 6 - else we execve with our path and the argument*/
+void    build_exec(char *arg_user, char *env[])
 {
     char **arg_cmd;
-    int i;
     char *cmplete_path;
+    char **path;
 
-    if (!path || !arg_user || !env)
+    if (!arg_user || !env)
         return;
     arg_cmd = ft_split(arg_user, ' ');
+    path = search_path(env);
     cmplete_path = exec_path(path, arg_cmd[0]);
-    if (execve(cmplete_path, arg_cmd, env))
-    {
-        free_split(arg_cmd);
-        free(path);
-        exit_bad("exec issue\n");
-    }
-    free_split(arg_cmd);
-    free(path);
+    free_split(path);
+    execve_bash(cmplete_path, arg_cmd, env);
+    free(cmplete_path);
     return ;
+}
+
+void execve_bash(char *path, char **arg_cmd, char **env)
+{
+    if (access(path, F_OK) == 0)
+    {
+        if(access(path, X_OK) != 0)
+            exit_error(errno, strerror(errno));
+        if (execve(path, arg_cmd, env) == -1)
+            exit_error(errno, strerror(errno));
+    }
+    exit_error(127, "command not found");
 }

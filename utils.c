@@ -5,15 +5,17 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: rjobert <rjobert@student.42barcelo>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/07/25 20:25:03 by rjobert           #+#    #+#             */
-/*   Updated: 2023/07/25 20:25:06 by rjobert          ###   ########.fr       */
+/*   Created: 2023/07/26 15:00:54 by rjobert           #+#    #+#             */
+/*   Updated: 2023/07/26 15:01:10 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-void  exit_bad(char *message)
+void    exit_error(int err, char *txt)
 {
-    perror(message);
-    exit(EXIT_FAILURE);
+    write(2, "pipex: ", 7);
+    write(2, txt, ft_strlen(txt));
+    write(2, "\n", 1);
+    exit(err);
 }
