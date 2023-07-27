@@ -18,18 +18,13 @@ int main(int argc, char *argv[], char *env[])
     int pipefd[2];
     int pid;
     
-
     if (argc != 5)
-        exit(EXIT_FAILURE);
+        exit_error(EXIT_FAILURE, "please enter 4 arguments");
     if (pipe(pipefd) == -1)
-        exit(EXIT_FAILURE);
+        exit_error(errno, strerror(errno));
     pid = fork();
     if (pid == -1)
-    {
-        perror("Error forking");
-        exit(EXIT_FAILURE);
-    }
-
+        exit_error(errno, strerror(errno));
     if (pid == 0)
         child_process(pipefd, argv, env);
     else
@@ -54,7 +49,7 @@ void    parent_process(int *pipefd, char *argv[], char *env[])
     
     fd = open(argv[4], O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd == -1)
-        exit(EXIT_FAILURE);
+        exit_error(errno, strerror(errno));
     waitpid(-1, &status, 0); 
     close(pipefd[1]);
     dup2(pipefd[0], STDIN_FILENO);  
@@ -78,7 +73,7 @@ void    child_process(int *pipefd, char *argv[], char *env[])
 
     fd = open(argv[1], O_RDONLY, 0666);
     if (fd == -1)
-        exit(EXIT_FAILURE);
+        exit_error(errno, strerror(errno));
     close(pipefd[0]);
     dup2(pipefd[1], STDOUT_FILENO);
     close(pipefd[1]);

@@ -13,7 +13,13 @@
 
 #include "pipex.h"
 
-/* first we need to iterate over the env and isolate the PATH*/
+/* first we need to iterate over the env and isolate the PATH
+1 - we receive end from the command line, it is array of char*
+2 - ietrate over each env[x] while not null, iterate while first
+    four chars are different than "PATH"
+3 - when we found it, we return it minus the 5 first char (that are "PATH=")
+4 - if there is no path in the env (extreme rare case but this is 42 school ... )
+    we replace it by a pre-define PATH in the header*/
 char **search_path(char *env[])
 {
     int i;
@@ -25,7 +31,7 @@ char **search_path(char *env[])
     while (env[i] && ft_strncmp(env[i], "PATH", 4))
         i++;
     if (!ft_strncmp(env[i], "PATH", 4))
-        path = env[i];
+        path = env[i] + 5;
     else
         path = DEF_PATH;
     path_matrix = ft_split(path, ':');
@@ -74,7 +80,10 @@ void    build_exec(char *arg_user, char *env[])
         return;
     arg_cmd = ft_split(arg_user, ' ');
     path = search_path(env);
-    cmplete_path = exec_path(path, arg_cmd[0]);
+    if (arg_user[0] == '/')
+        cmplete_path = arg_user;
+    else
+        cmplete_path = exec_path(path, arg_cmd[0]);
     free_split(path);
     execve_bash(cmplete_path, arg_cmd, env);
     free(cmplete_path);
