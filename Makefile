@@ -14,25 +14,33 @@
 CC = CC
 
 FLAGS = -Wall -Werror -Wextra -MMD -I/.
-SRC = $(wildcard *.c)
+SRC =  pipe.c env_parsing.c utils.c
 OBJS = $(SRC:.c=.o)
 DEPS = $(SRC:.c=.d)
+
+LIBFT_PATH = ./libft
+LIBFT = $(LIBFT_PATH)/libft.a
 NAME = pipex
 
-all: $(NAME)
+all: $(LIBFT) $(NAME)
 
 -include $(DEPS)
 $(NAME): $(OBJS)
-	$(CC) $(FLAGS) $(OBJS) -o $(NAME)
+	$(CC) $(FLAGS) $(OBJS) $(LIBFT) -o $(NAME)
 
+$(LIBFT):
+	make -C $(LIBFT_PATH) all
 %.o: %.c
 	$(CC) $(FLAGS) -c $< -o $@
  
 clean:
+	make -C $(LIBFT_PATH) clean
 	rm -rf $(OBJS) $(DEPS)
 
 fclean: clean
+	make -C $(LIBFT_PATH) fclean
 	rm -rf $(NAME)
+	
 
 re: fclean all
 
