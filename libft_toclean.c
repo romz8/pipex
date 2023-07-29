@@ -138,35 +138,6 @@ char	**ft_split(char const *s, char c)
 	return (matrix);
 }
 
-/* NOW CLEAN : USED A LOT AND CREATED*/
-void free_split(char **split_result)
-{
-    int i;
-
-    if (!*split_result)
-        return ;
-    i = 0;
-    while (split_result[i])
-    {
-        free(split_result[i]);
-        i++;
-    }
-}
-
-int split_len(char **split_result)
-{
-    int i;
-
-    if (!*split_result)
-        return (0);
-    i = 0;
-    while (split_result[i])
-    {
-        i++;
-    }
-    return (i);
-}
-
 char	*ft_strdup(const char *s1)
 {
 	size_t	len;

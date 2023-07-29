@@ -19,16 +19,16 @@ int main(int argc, char *argv[], char *env[])
     int pid;
     
     if (argc != 5)
-        exit_error(EXIT_FAILURE, "please enter 4 arguments");
+        exit_error(EXIT_FAILURE, "please enter 4 arguments", NULL);
     if (pipe(pipefd) == -1)
-        exit_error(errno, strerror(errno));
+        exit_error(errno, strerror(errno), NULL);
     pid = fork();
     if (pid == -1)
-        exit_error(errno, strerror(errno));
+        exit_error(errno, strerror(errno), NULL);
     if (pid == 0)
         child_process(pipefd, argv, env);
     else
-        parent_process(pipefd, argv, env);
+        parent_process(pipefd, argv, env, pid);
     close(pipefd[0]);
     close(pipefd[1]);
     
@@ -42,15 +42,15 @@ int main(int argc, char *argv[], char *env[])
 4 - we close our output file fd to avoid duplicate
 5 - we can now use the exec function piping from pipfd[0] = STDIN and piping out to STDOUT = outputfile's fd
 */
-void    parent_process(int *pipefd, char *argv[], char *env[])  
+void    parent_process(int *pipefd, char *argv[], char *env[], int pid)  
 {
     int status;
     int fd;
     
     fd = open(argv[4], O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd == -1)
-        exit_error(errno, strerror(errno));
-    waitpid(-1, &status, 0); 
+        exit_error(errno, strerror(errno), argv[4]);
+    waitpid(pid, &status, 0); 
     close(pipefd[1]);
     dup2(pipefd[0], STDIN_FILENO);  
     close(pipefd[0]);             
@@ -73,7 +73,7 @@ void    child_process(int *pipefd, char *argv[], char *env[])
 
     fd = open(argv[1], O_RDONLY, 0666);
     if (fd == -1)
-        exit_error(errno, strerror(errno));
+        exit_error(errno, strerror(errno), argv[1]);
     close(pipefd[0]);
     dup2(pipefd[1], STDOUT_FILENO);
     close(pipefd[1]);

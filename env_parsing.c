@@ -28,12 +28,18 @@ char **search_path(char *env[])
     
     path = NULL;
     i = 0;
-    while (env[i] && ft_strncmp(env[i], "PATH", 4))
-        i++;
-    if (!ft_strncmp(env[i], "PATH", 4))
-        path = env[i] + 5;
-    else
+    if (!*env)
         path = DEF_PATH;
+    else
+    {
+        while (env[i] && ft_strncmp(env[i], "PATH", 4))
+            i++;
+        if (!ft_strncmp(env[i], "PATH", 4))
+            path = env[i] + 5;
+        else
+            path = DEF_PATH;
+    }
+    //perror(path);
     path_matrix = ft_split(path, ':');
     return(path_matrix);
 }
@@ -64,10 +70,14 @@ char *exec_path(char **all_path, char *cmd)
  2- we split the the cmd argument with ft_split on space : 
  "ls -l" becomes:
     arg_cmd = ["ls", "-l", NULL]
+ 2.b - special case for one command : awk. it is entered as awk 'set of actions'
+ so build a special case when the command entered is awk.
  3 - we use search_path to look for the path inside the env[] and return a split
   matrix of all path separated by :  
  4 - we search for the correct path inside the matrix with exec_path : if access 
  function return a a path, it is where the cmmd can be found, otherwise return null
+ 4.b - special case when the cmd is with absolute path (instead of cat we enter /bin/cat)
+ in that case the path is already here, so if arg_user[0] = '\', path = arg_user
  5 - if we have a null value we can now call exit as the path won't be correct
  6 - else we execve with our path and the argument*/
 void    build_exec(char *arg_user, char *env[])
@@ -78,9 +88,14 @@ void    build_exec(char *arg_user, char *env[])
 
     if (!arg_user || !env)
         return;
-    arg_cmd = ft_split(arg_user, ' ');
+    if (!ft_strncmp(arg_user, "awk", 3))
+        arg_cmd = special_split(arg_user, arg_user[4]);
+    else
+        arg_cmd = ft_split(arg_user, ' ');
+    /*if (arg_cmd[1][0] == '\'' || arg_cmd[1][0] == '"')  // if we have "awk 'patter1 {action}"
+        special_split(arg_user, &arg_cmd, arg_cmd[1][0]); */
     path = search_path(env);
-    if (arg_user[0] == '/')
+    if (arg_user[0] == '/')   //incase the command is like file1 cmd1 | /bin/cat file2
         cmplete_path = arg_user;
     else
         cmplete_path = exec_path(path, arg_cmd[0]);
@@ -95,9 +110,34 @@ void execve_bash(char *path, char **arg_cmd, char **env)
     if (access(path, F_OK) == 0)
     {
         if(access(path, X_OK) != 0)
-            exit_error(errno, strerror(errno));
+            exit_error(errno, strerror(errno), arg_cmd[0]);
         if (execve(path, arg_cmd, env) == -1)
-            exit_error(errno, strerror(errno));
+            exit_error(errno, strerror(errno), arg_cmd[0]);
     }
-    exit_error(127, "command not found");
+    exit_error(127, "command not found", arg_cmd[0]);
+}
+
+/* the issue is that if argument is "awk '{action} pattern2 {action2}'"
+therefore if we do a split on " " we have :
+    arg_cmd[1] : '{action}
+    arg_cmd[2] : pattern2
+    arg_cmd[3] : {action2}'
+but we need to rebuild it as execve needs to be
+execve(/correctpath/awk, args, env) with args as :
+    char *args[] = {"awk", "{count++} END {print count}", "input.tx
+so what we do is that in build_execve, the cmd is awk, do :
+1 - a split using special_split() on user arguments but this time on 
+the type of "" or '' entered by the user (which is arg_user[4])
+2 - the only issue is that in the arguments resulting from the split, the 
+arguments[0] will be "awk " and we want to get rid of this space using
+the strdup custom (we copy only intil space and free the initial word we
+allocated memory for the original "awk " inside the split function)
+    */
+char    **special_split(char *arg_user, char c)
+{
+    char    **arguments;
+
+    arguments = ft_split(arg_user, c);
+    arguments[0] = strdup_custom(arguments[0], ' ');
+    return (arguments);
 }
