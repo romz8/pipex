@@ -42,5 +42,6 @@ void	exit_error(int err, char *txt, char *cmd);
 void	execve_bash(char *path, char **arg_cmd, char **env);
 char	**special_split(char *arg_user, char c);
 char	*strdup_custom(const char *s1, char c);
-
+char	find_sep(char *cmd);
+char	**split_quotes(char const *s, char c);
 #endif

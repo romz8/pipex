@@ -74,3 +74,13 @@ char	*strdup_custom(const char *s1, char c)
 	free((void *) s1);
 	return (cpy);
 }
+
+char	find_sep(char *cmd)
+{
+	int	i;
+
+	i = 0;
+	while (cmd[i] && cmd[i] != 34 && cmd[i] != 39)
+		i++;
+	return cmd[i];
+} 
