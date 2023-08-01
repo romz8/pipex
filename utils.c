@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42barcelo>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 15:00:54 by rjobert           #+#    #+#             */
-/*   Updated: 2023/07/29 20:18:45 by rjobert          ###   ########.fr       */
+/*   Updated: 2023/08/01 20:08:33 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,44 +79,36 @@ char	*strdup_custom(const char *s1, char c)
 	return (cpy);
 }
 
-char	find_sep(char *cmd)
-{
-	int	i;
-
-	i = 0;
-	while (cmd[i] && cmd[i] != 34 && cmd[i] != 39)
-		i++;
-	return cmd[i];
-} 
-
 /* for the special case of a relative path ./subfoler/path
 there can be weird test like :
  ./script\"quote.sh that is correct in shell but execve can not
  accept the escape character (\) in path nor command so we
  need to clean both and end-up with ./script"quote.sh 
- (which woulld be wrong for cdl but correct for execve)*/
-void relative_path_clean(char **arg_user, char **arg_cmd, char **cmplete_path)
+ (which woulld be wrong for cdl but correct for execve)
+ */
+void	relative_path_clean(char **arg, char **cmd, char **cmplete_path)
 {
 	int	i;
-	if (!*arg_user || !*arg_cmd || !*cmplete_path)
+
+	if (!*arg || !*cmd || !*cmplete_path)
 		return ;
-	if (ft_strchr(*arg_user, 32))
-		exit_error(127, "No such file or directory", arg_cmd[0]);
+	if (ft_strchr(*arg, 32))
+		exit_error(127, "No such file or directory", cmd[0]);
 	i = 0;
-	while (arg_cmd[i])
+	while (cmd[i])
 	{
-		if (ft_strnstr(arg_cmd[i], "\"", ft_strlen(arg_cmd[i])))
+		if (ft_strnstr(cmd[i], "\"", ft_strlen(cmd[i])))
 		{
-			ft_strtrim(arg_cmd[i], "\\");
+			ft_strtrim(cmd[i], "\\");
 		}
-		if (ft_strnstr(arg_cmd[i], "\'", ft_strlen(arg_cmd[i])))
+		if (ft_strnstr(cmd[i], "\'", ft_strlen(cmd[i])))
 		{
-			ft_strtrim(arg_cmd[i], "\\");
+			ft_strtrim(cmd[i], "\\");
 		}
 		i++;
 	}
 	if (ft_strnstr(*cmplete_path, "\"", ft_strlen(*cmplete_path)))
-		*cmplete_path = arg_cmd[0];
+		*cmplete_path = cmd[0];
 	if (ft_strnstr(*cmplete_path, "\'", ft_strlen(*cmplete_path)))
-		*cmplete_path = arg_cmd[0];
+		*cmplete_path = cmd[0];
 }

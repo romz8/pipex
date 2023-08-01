@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42barcelo>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/25 09:36:38 by rjobert           #+#    #+#             */
-/*   Updated: 2023/07/29 20:10:03 by rjobert          ###   ########.fr       */
+/*   Updated: 2023/08/01 20:04:09 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ void	parent_process(int *pipefd, char *argv[], char *env[], int pid)
 
 	fd = open(argv[4], O_WRONLY | O_TRUNC | O_CREAT, 0666);
 	if (fd == -1)
-		exit_error(1, strerror(errno), argv[4]); //hrad coded becasue paco expect 1 and not 13
+		exit_error(1, strerror(errno), argv[4]);
 	waitpid(pid, &status, WNOHANG); 
 	close(pipefd[1]);
 	dup2(pipefd[0], STDIN_FILENO);

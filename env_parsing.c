@@ -6,20 +6,22 @@
 /*   By: rjobert <rjobert@student.42barcelo>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/25 18:01:16 by rjobert           #+#    #+#             */
-/*   Updated: 2023/07/30 15:03:12 by rjobert          ###   ########.fr       */
+/*   Updated: 2023/08/01 20:03:09 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-/* Extract the PATH from environment variables in env[]
-1 - we receive env from the command line, it is array of char*
-if it is null (env empty), we return a matrix split of a default path
-2 - else we itetrate over each env[x] while not null, iterate while first
-    four chars are different than "PATH"
-3 - when we found it, we return it minus the 5 first char (that are "PATH=")
-4 - if there an is no path in the env (extremely rare but this is 42 school ... )
-    we replace it by a pre-define PATH in the header*/
+/*
+ Extract the PATH from environment variables in env[]
+ 1 - we receive env from the command line, it is array of char*
+ if it is null (env empty), we return a matrix split of a default path
+ 2 - else we itetrate over each env[x] while not null, iterate while first
+ four chars are different than "PATH"
+ 3 - when we found it, we return it minus the 5 first char (that are "PATH=")
+ 4 - if there an is no path in the env (extremely rare but this is 42 school...)
+ we replace it by a pre-define PATH in the header
+*/
 char	**search_path(char *env[])
 {
 	int		i;
@@ -31,7 +33,7 @@ char	**search_path(char *env[])
 	if (!env || !*env)
 	{
 		path_matrix = ft_split(DEF_PATH, ':');
-		return(path_matrix);
+		return (path_matrix);
 	}
 	else
 	{
@@ -75,7 +77,8 @@ char	*exec_path(char **all_path, char *cmd)
 	return (NULL);
 }
 
-/*objective : we build the execve with error check along the way
+/*
+objective : we build the execve with error check along the way
 inputs for execve are path (/bin/cat), an array of command info
  (ex : "ls -l" would yield {"ls, "-l", NULL}) and the env variables. 
  1- build command array : from cmd (argv) to arg_cmd ({cmd, arguments, NULL}): 
@@ -122,7 +125,8 @@ void	build_exec(char *arg_user, char *env[])
 	return ;
 }
 
-/* Objective : apply execve with many error handling
+/* 
+Objective : apply execve with many error handling
 1 - first if the path is findable (the path reach a file that exist - 
 we verify that (again) with access and F_OK) we then test several cases:
 1.a - if the file is not exectutable ( a script.sh where -x- right are
@@ -137,7 +141,7 @@ with arg_cmd[0] as path
 void	execve_bash(char *path, char **arg_cmd, char **env)
 {
 	if (access(path, F_OK) == 0)
-	{	
+	{
 		if (access(path, X_OK) != 0)
 			exit_error(126, strerror(errno), arg_cmd[0]);
 		if (execve(path, arg_cmd, env) == -1)
@@ -151,7 +155,8 @@ void	execve_bash(char *path, char **arg_cmd, char **env)
 	exit_error(127, "command not found", arg_cmd[0]);
 }
 
-/* the issue is that if argument is "awk '{action} pattern2 {action2}'"
+/* 
+the issue is that if argument is "awk '{action} pattern2 {action2}'"
 or same usage for sed, ft_split will break our argv[] in too many parts.
 Indeed if we do a split on " " (space) we have :
     arg_cmd[1] : '{action}
@@ -168,7 +173,7 @@ first ' or " in the command. We then split on this separator
 arguments[0] will be "awk " and we want to get rid of this space using
 the strdup custom (we copy only intil space and free the initial word we
 allocated memory for the original "awk " inside the split function)
-    */
+*/
 char	**special_split(char *arg_user, char c)
 {
 	char	**arguments;

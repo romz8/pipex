@@ -6,7 +6,7 @@
 /*   By: rjobert <rjobert@student.42barcelo>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/25 09:45:43 by rjobert           #+#    #+#             */
-/*   Updated: 2023/07/29 20:13:42 by rjobert          ###   ########.fr       */
+/*   Updated: 2023/08/01 20:04:59 by rjobert          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,5 +44,5 @@ char	**special_split(char *arg_user, char c);
 char	*strdup_custom(const char *s1, char c);
 char	find_sep(char *cmd);
 char	**split_quotes(char const *s, char c);
-void relative_path_clean(char **arg_user, char **arg_cmd, char **cmplete_path);
+void	relative_path_clean(char **arg, char **cmd, char **cmplete_path);
 #endif
