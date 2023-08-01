@@ -51,9 +51,9 @@ void	parent_process(int *pipefd, char *argv[], char *env[], int pid)
 	int	status;
 	int	fd;
 
-	fd = open(argv[4], O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	fd = open(argv[4], O_WRONLY | O_TRUNC | O_CREAT, 0666);
 	if (fd == -1)
-		exit_error(errno, strerror(errno), argv[4]);
+		exit_error(1, strerror(errno), argv[4]); //hrad coded becasue paco expect 1 and not 13
 	waitpid(pid, &status, WNOHANG); 
 	close(pipefd[1]);
 	dup2(pipefd[0], STDIN_FILENO);

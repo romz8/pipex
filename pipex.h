@@ -44,4 +44,5 @@ char	**special_split(char *arg_user, char c);
 char	*strdup_custom(const char *s1, char c);
 char	find_sep(char *cmd);
 char	**split_quotes(char const *s, char c);
+void relative_path_clean(char **arg_user, char **arg_cmd, char **cmplete_path);
 #endif

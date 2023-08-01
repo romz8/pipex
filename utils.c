@@ -12,6 +12,7 @@
 
 #include "pipex.h"
 
+/*display error message as shell would for a cmd 1 | cmd2 error */
 void	exit_error(int err, char *txt, char *cmd)
 {
 	write(2, "pipex: ", 7);
@@ -25,6 +26,7 @@ void	exit_error(int err, char *txt, char *cmd)
 	exit(err);
 }
 
+/*to clear matrices of strings used for path search*/
 void	free_split(char **split_result)
 {
 	int	i;
@@ -39,6 +41,7 @@ void	free_split(char **split_result)
 	}
 }
 
+/*to measure depth of those matrices*/
 int	split_len(char **split_result)
 {
 	int	i;
@@ -51,6 +54,7 @@ int	split_len(char **split_result)
 	return (i);
 }
 
+/*to copy a string but without its end space*/
 char	*strdup_custom(const char *s1, char c)
 {
 	char	*cpy;
@@ -84,3 +88,35 @@ char	find_sep(char *cmd)
 		i++;
 	return cmd[i];
 } 
+
+/* for the special case of a relative path ./subfoler/path
+there can be weird test like :
+ ./script\"quote.sh that is correct in shell but execve can not
+ accept the escape character (\) in path nor command so we
+ need to clean both and end-up with ./script"quote.sh 
+ (which woulld be wrong for cdl but correct for execve)*/
+void relative_path_clean(char **arg_user, char **arg_cmd, char **cmplete_path)
+{
+	int	i;
+	if (!*arg_user || !*arg_cmd || !*cmplete_path)
+		return ;
+	if (ft_strchr(*arg_user, 32))
+		exit_error(127, "No such file or directory", arg_cmd[0]);
+	i = 0;
+	while (arg_cmd[i])
+	{
+		if (ft_strnstr(arg_cmd[i], "\"", ft_strlen(arg_cmd[i])))
+		{
+			ft_strtrim(arg_cmd[i], "\\");
+		}
+		if (ft_strnstr(arg_cmd[i], "\'", ft_strlen(arg_cmd[i])))
+		{
+			ft_strtrim(arg_cmd[i], "\\");
+		}
+		i++;
+	}
+	if (ft_strnstr(*cmplete_path, "\"", ft_strlen(*cmplete_path)))
+		*cmplete_path = arg_cmd[0];
+	if (ft_strnstr(*cmplete_path, "\'", ft_strlen(*cmplete_path)))
+		*cmplete_path = arg_cmd[0];
+}
