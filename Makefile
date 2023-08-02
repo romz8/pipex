@@ -14,7 +14,7 @@
 CC = CC
 
 FLAGS = -Wall -Werror -Wextra -MMD -I/.
-SRC =  pipe.c env_parsing.c utils.c split_quotes.c
+SRC =  pipe.c env_parsing.c utils.c split_quotes.c error_free.c
 OBJS = $(SRC:.c=.o)
 DEPS = $(SRC:.c=.d)
 

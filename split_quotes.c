@@ -67,7 +67,6 @@ static char	*word_insert(const char *str, char c, int i, int j)
 	word = malloc(i - j + 1);
 	if (!word)
 		return (NULL);
-	word[i] = '\0';
 	i = 0;
 	j = 0;
 	while (str[i] && !(str[i] == c && str[i - 1] != 92)) 
@@ -79,6 +78,7 @@ static char	*word_insert(const char *str, char c, int i, int j)
 		}
 		i++;
 	}
+	word[j] = '\0';
 	return (word);
 }
 
@@ -95,10 +95,10 @@ char	**split_quotes(char const *s, char c)
 	int		i;
 	int		wc;
 
-	wc = wordcount(s, c);
 	if (!s)
 		return (NULL);
-	matrix = malloc((wc + 1) * 8);
+	wc = wordcount(s, c);
+	matrix = malloc((wc + 1) * sizeof(char *));
 	if (!matrix)
 		return (NULL);
 	i = 0;

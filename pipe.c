@@ -18,16 +18,16 @@ int	main(int argc, char *argv[], char *env[])
 	int	pid;
 
 	if (argc != 5)
-		exit_error(EXIT_FAILURE, "please enter 4 arguments", NULL);
+		exit_error(EXIT_FAILURE, "please enter 4 arguments", NULL, NULL);
 	if (pipe(pipefd) == -1)
-		exit_error(errno, strerror(errno), NULL);
+		exit_error(errno, strerror(errno), NULL, NULL);
 	pid = fork();
 	if (pid == -1)
-		exit_error(errno, strerror(errno), NULL);
+		exit_error(errno, strerror(errno), NULL, NULL);
 	if (pid == 0)
 		child_process(pipefd, argv, env);
 	else
-		parent_process(pipefd, argv, env, pid);
+		parent_process(pipefd, argv, env);
 	close(pipefd[0]);
 	close(pipefd[1]);
 	exit(EXIT_SUCCESS);
@@ -46,21 +46,21 @@ function stdout exec will redirect to the fd (STDOUT is now the fd)
 5 - we can now use the exec function piping from pipfd[0] = STDIN and 
 piping out to STDOUT = outputfile's fd
 */
-void	parent_process(int *pipefd, char *argv[], char *env[], int pid)
+void	parent_process(int *pipefd, char *argv[], char *env[])
 {
 	int	status;
 	int	fd;
 
 	fd = open(argv[4], O_WRONLY | O_TRUNC | O_CREAT, 0666);
 	if (fd == -1)
-		exit_error(1, strerror(errno), argv[4]);
-	waitpid(pid, &status, WNOHANG); 
+		exit_error(1, strerror(errno), argv[4], NULL);
+	waitpid(-1, &status, WNOHANG); 
 	close(pipefd[1]);
 	dup2(pipefd[0], STDIN_FILENO);
 	close(pipefd[0]);
 	dup2(fd, STDOUT_FILENO);
 	close (fd);
-	build_exec(argv[3], env);
+	build_exec(argv[3], env, fd);
 }
 
 /*child process doing from inutfile to the write-end 
@@ -84,12 +84,11 @@ void	child_process(int *pipefd, char *argv[], char *env[])
 
 	fd = open(argv[1], O_RDONLY, 0666);
 	if (fd == -1)
-		exit_error(errno, strerror(errno), argv[1]);
+		exit_error(errno, strerror(errno), argv[1], NULL);
 	close(pipefd[0]);
 	dup2(pipefd[1], STDOUT_FILENO);
 	close(pipefd[1]);
 	dup2(fd, STDIN_FILENO);
 	close(fd);
-	build_exec(argv[2], env);
-	exit(EXIT_SUCCESS);
+	build_exec(argv[2], env, fd);
 }

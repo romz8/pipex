@@ -87,7 +87,7 @@ inputs for execve are path (/bin/cat), an array of command info
  1.b - special case for one command : awk and sed it is entered as 
  awk 'set of actions' so we apply special_split() focus around "" or ''
  2 - we use search_path to look for the path inside the env[] and return a
- splitmatrix of all path separated by ':' in LINUX environment
+ splitmatrix of all path separated by ':' as in LINUX environment
  3 - we search for the correct path inside the matrix with exec_path : if access
  function return a path, it is where the cmd can be found,
  otherwise return null. we will need to free afterward as we used malloc
@@ -100,29 +100,30 @@ inputs for execve are path (/bin/cat), an array of command info
  4 - we can clean our path matrix, and free the cmplete_path after using
  execve_bash : an application of execve with special error handling
  */
-void	build_exec(char *arg_user, char *env[])
+void	build_exec(char *arg_user, char *env[], int fd)
 {
-	char	**arg_cmd;
-	char	*cmplete_path;
-	char	**path;
+	char	**unix_paths;
+	t_cmd	*path_cmd;
 
 	if (!arg_user)
 		return ;
+	path_cmd = malloc(sizeof(t_cmd));
+	if (!path_cmd)
+		return ;
+	path_cmd->fd = fd;
 	if (!ft_strncmp(arg_user, "awk", 3) || !ft_strncmp(arg_user, "sed", 3))
-		arg_cmd = special_split(arg_user, find_sep(arg_user));
+		path_cmd->args = special_split(arg_user, find_sep(arg_user));
 	else
-		arg_cmd = special_split(arg_user, ' ');
-	path = search_path(env);
+		path_cmd->args = special_split(arg_user, ' ');
+	unix_paths = search_path(env);
 	if (arg_user[0] == '/' || (arg_user[0] == '.' && arg_user[1] == '/'))
-		cmplete_path = arg_cmd[0];
-	else 
-		cmplete_path = exec_path(path, arg_cmd[0]);
+		fill_path(&path_cmd, path_cmd->args[0], 0);
+	else
+		fill_path(&path_cmd, exec_path(unix_paths, path_cmd->args[0]), 1);
 	if (arg_user[0] == '.' && arg_user[1] == '/')
-		relative_path_clean(&arg_user, arg_cmd, &cmplete_path);
-	free_split(path);
-	execve_bash(cmplete_path, arg_cmd, env);
-	free(cmplete_path);
-	return ;
+		relative_path_clean(&arg_user, &path_cmd);
+	free_split(&unix_paths);
+	execve_bash(&path_cmd, env);
 }
 
 /* 
@@ -138,21 +139,22 @@ and in that case iterating or env wasn't a clear sucees, so we apply execve
 with arg_cmd[0] as path
 3 - if nothing worked, command is clearly unknown -> exit error message  
 */
-void	execve_bash(char *path, char **arg_cmd, char **env)
+void	execve_bash(t_cmd **p_cmd, char **env)
 {
-	if (access(path, F_OK) == 0)
+	if (access((*p_cmd)->path, F_OK) == 0)
 	{
-		if (access(path, X_OK) != 0)
-			exit_error(126, strerror(errno), arg_cmd[0]);
-		if (execve(path, arg_cmd, env) == -1)
-			exit_error(errno, strerror(errno), arg_cmd[0]);
+		if (access((*p_cmd)->path, X_OK) != 0)
+			exit_error(126, strerror(errno), (*p_cmd)->args[0], p_cmd);
+		if (execve((*p_cmd)->path, (*p_cmd)->args, env) == -1)
+			exit_error(errno, strerror(errno), (*p_cmd)->args[0], p_cmd);
 	}
-	else if (ft_strchr(arg_cmd[0], '/') && access(arg_cmd[0], F_OK) == 0)
+	if (ft_strchr((*p_cmd)->args[0], '/') 
+		&& access((*p_cmd)->args[0], F_OK) == 0)
 	{
-		if (execve(arg_cmd[0], arg_cmd, env) == -1)
-			exit_error(errno, strerror(errno), arg_cmd[0]);
+		if (execve((*p_cmd)->args[0], (*p_cmd)->args, env) == -1)
+			exit_error(errno, strerror(errno), (*p_cmd)->args[0], p_cmd);
 	}
-	exit_error(127, "command not found", arg_cmd[0]);
+	exit_error(127, "command not found", (*p_cmd)->args[0], p_cmd);
 }
 
 /* 
@@ -179,6 +181,6 @@ char	**special_split(char *arg_user, char c)
 	char	**arguments;
 
 	arguments = split_quotes(arg_user, c);
-	arguments[0] = ft_strtrim(arguments[0], " ");
+	arguments[0] = strdup_custom(arguments[0], ' ');
 	return (arguments);
 }
