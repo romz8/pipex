@@ -12,7 +12,8 @@
 
 #include "pipex.h"
 
-/*display error message as shell would for a cmd 1 | cmd2 error */
+/*display error message as shell would for a cmd 1 | cmd2 error 
+if the struct path_cmd is provided, we clear all inside */
 void	exit_error(int err, char *txt, char *cmd, t_cmd **p_cmd)
 {
 	write(2, "pipex: ", 7);
@@ -45,6 +46,13 @@ void	free_split(char ***split_result)
 	*split_result = NULL;
 }
 
+/*
+clear all what's inside the process due to error
+1 - close the fd
+2 - if path was malloc, free
+3 - clear all arguments (malloc string) from split matrix 
+4 - clear the matrix itslef and set to null
+*/
 void	free_cmd(t_cmd **cmd)
 {
 	int	i;
